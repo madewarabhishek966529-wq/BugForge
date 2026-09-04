@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     AI_MODEL: str = "gpt-4o"
     
     RUNTIME_TIMEOUT: int = 30
+    PYTHON_EXECUTABLE: str = "python"
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -28,6 +28,11 @@ def render():
 
     st.markdown("---")
     st.subheader("Scanned Projects")
+
+    # Security Warning
+    st.warning("⚠️ **Warning:** BugForge will execute code from this project on your local computer. Only analyze and run projects that you trust.")
+    confirm_exec = st.checkbox("I understand and confirm that I trust local project execution on this machine.")
+
     try:
         res = requests.get(f"{API_URL}/projects")
         if res.status_code == 200:
@@ -40,12 +45,51 @@ def render():
                         st.write(f"**Path:** `{proj['path']}`")
                         st.write(f"**Language:** {proj['language']}")
                         st.write(f"**Created At:** {proj['created_at']}")
-                        c1, c2 = st.columns(2)
-                        if c1.button("Scan Project", key=f"scan_{proj['id']}"):
-                            st.info("Scan initiated...")
-                        if c2.button("Run Entrypoint", key=f"run_{proj['id']}"):
-                            st.info("Run initiated...")
+                        
+                        entry_point = st.text_input(f"Entry File for Project #{proj['id']}", value="main.py", key=f"entry_{proj['id']}")
+                        
+                        col1, col2 = st.columns(2)
+                        if col1.button("Scan Project", key=f"scan_{proj['id']}"):
+                            try:
+                                scan_res = requests.post(f"{API_URL}/projects/{proj['id']}/scan")
+                                if scan_res.status_code == 200:
+                                    data = scan_res.json()
+                                    st.success(f"Found {data['files_found']} Python files. Identified entry points: {data['entry_points']}")
+                                else:
+                                    st.error(f"Scan failed: {scan_res.text}")
+                            except Exception as e:
+                                st.error(f"Error scanning project: {e}")
+
+                        if col2.button("Run Project Entrypoint", key=f"run_{proj['id']}"):
+                            if not confirm_exec:
+                                st.error("Execution blocked: You must confirm the execution safety warning above before running code.")
+                            else:
+                                try:
+                                    with st.spinner("Executing Python script locally..."):
+                                        run_res = requests.post(
+                                            f"{API_URL}/projects/{proj['id']}/run",
+                                            json={"entry_point": entry_point}
+                                        )
+                                    if run_res.status_code == 200:
+                                        result = run_res.json()
+                                        if result.get("timed_out"):
+                                            st.error("Execution Timed Out!")
+                                        elif result.get("exit_code") == 0:
+                                            st.success("Execution completed successfully!")
+                                        else:
+                                            st.warning(f"Execution finished with exit code {result.get('exit_code')}")
+
+                                        if result.get("stdout"):
+                                            st.subheader("stdout")
+                                            st.code(result["stdout"])
+                                        if result.get("stderr"):
+                                            st.subheader("stderr")
+                                            st.code(result["stderr"])
+                                    else:
+                                        st.error(f"Run failed: {run_res.text}")
+                                except Exception as e:
+                                    st.error(f"Error running project: {e}")
         else:
-            st.error("Failed to load projects from backend.")
+            st.error("Failed to load projects from backend API.")
     except Exception as e:
         st.warning("Backend API is currently offline. Start the backend to view project data.")
