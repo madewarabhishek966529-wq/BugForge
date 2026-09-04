@@ -7,6 +7,7 @@ from google.genai import types
 
 from backend.app.core.config import settings
 from backend.app.ai.provider import AIProvider
+from backend.app.ai.prompt_builder import PromptBuilder
 from backend.app.schemas.analysis import AIAnalysisOutput
 
 logger = logging.getLogger("bugforge.ai.gemini")
@@ -34,54 +35,7 @@ class GeminiProvider(AIProvider):
                 "tests_to_run": []
             }
 
-        prompt = f"""
-You are an expert Python debugging assistant working inside BugForge.
-Analyze the following Python bug context and determine the root cause, evidence, risks, and unified patch fix.
-
-=== BUG CONTEXT ===
-Error Type: {context.get('error_type')}
-Message: {context.get('message')}
-File Path: {context.get('file_path')}
-Line Number: {context.get('line_number')}
-Function: {context.get('function_name')}
-
-Stack Trace:
-{context.get('stack_trace', 'N/A')}
-
-Source Code Snippet (around error location):
-{context.get('code_snippet', 'N/A')}
-
-Static Analysis Findings:
-{context.get('static_warnings', 'None')}
-====================
-
-Provide your diagnosis in strictly valid JSON matching this schema:
-{{
-  "error_type": "string",
-  "severity": "critical | high | medium | low",
-  "confidence": float (0.0 to 1.0),
-  "summary": "string",
-  "root_cause": "string",
-  "facts": ["string"],
-  "hypotheses": ["string"],
-  "evidence": [
-    {{
-      "file": "string",
-      "line": int,
-      "reason": "string"
-    }}
-  ],
-  "suggested_fix": "string",
-  "patch": {{
-    "file": "string",
-    "original_code": "string",
-    "fixed_code": "string"
-  }},
-  "risks": ["string"],
-  "tests_to_run": ["string"]
-}}
-Return ONLY valid JSON.
-"""
+        prompt = PromptBuilder().build_bug_analysis_prompt(context)
 
         try:
             client = genai.Client(api_key=self.api_key)
