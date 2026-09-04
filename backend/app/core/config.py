@@ -11,9 +11,10 @@ class Settings(BaseSettings):
     
     DATABASE_URL: str = "sqlite:///./bugforge.db"
     
-    AI_PROVIDER: str = "openai"
+    AI_PROVIDER: str = "gemini"
+    GEMINI_API_KEY: str = ""
     AI_API_KEY: str = ""
-    AI_MODEL: str = "gpt-4o"
+    AI_MODEL: str = "gemini-2.5-flash"
     
     RUNTIME_TIMEOUT: int = 30
     PYTHON_EXECUTABLE: str = "python"

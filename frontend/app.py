@@ -17,17 +17,17 @@ page = st.sidebar.radio(
 )
 
 if page == "Dashboard":
-    from frontend.pages import dashboard
+    from pages import dashboard
     dashboard.render()
 elif page == "Projects":
-    from frontend.pages import projects
+    from pages import projects
     projects.render()
 elif page == "Bug Explorer":
-    from frontend.pages import bug_explorer
+    from pages import bug_explorer
     bug_explorer.render()
 elif page == "Runtime Logs":
-    from frontend.pages import runtime_logs
+    from pages import runtime_logs
     runtime_logs.render()
 elif page == "Settings":
-    from frontend.pages import settings
+    from pages import settings
     settings.render()
