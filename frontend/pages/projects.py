@@ -91,9 +91,14 @@ def render():
         "⚠️ **Warning:** BugForge will execute code from this project on your "
         "local computer. Only analyze and run projects that you trust."
     )
-    confirm_exec = st.checkbox(
-        "I understand and confirm that I trust local project execution on this machine."
+    if "exec_confirmed" not in st.session_state:
+        st.session_state["exec_confirmed"] = False
+
+    st.session_state["exec_confirmed"] = st.checkbox(
+        "I understand and confirm that I trust local project execution on this machine.",
+        value=st.session_state["exec_confirmed"],
     )
+    confirm_exec = st.session_state["exec_confirmed"]
 
     try:
         res = requests.get(f"{API_URL}/projects")
